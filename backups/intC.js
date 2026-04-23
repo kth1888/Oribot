@@ -3,21 +3,6 @@ const { Events, MessageFlags, Collection } = require('discord.js');
 module.exports = {
     name: Events.InteractionCreate,
     async execute(interaction) {
-        if (interaction.isAutocomplete()) {
-            const command = interaction.client.commands.get(interaction.commandName);
-            if (!command) {
-                console.error(`No command matching ${interaction.commandName} was found.`);
-                return;
-            }
-            try {
-                await command.autocomplete(interaction);
-            } catch (error) {
-                console.error(error);
-            }
-            return;
-        }
-
-        // Early return (if else 에 안 묶음)
         if (!interaction.isChatInputCommand()) return;
 
         const command = interaction.client.commands.get(interaction.commandName);
@@ -57,15 +42,35 @@ module.exports = {
             await command.execute(interaction);
         } catch (error) {
             console.error(error);
-            const errorMessage = {
+            if (interaction.replied || interaction.deferred) {
+                await interaction.followUp({
                     content: 'There was an error while executing this command!',
                     flags: MessageFlags.Ephemeral,
-            };
-            if (interaction.replied || interaction.deferred) {
-                await interaction.followUp(errorMessage);
+                });
             } else {
-                await interaction.reply(errorMessage);
+                await interaction.reply({
+                    content: 'There was an error while executing this command!',
+                    flags: MessageFlags.Ephemeral,
+                });
             }
         }
     },
 };
+
+
+client.on(Events.InteractionCreate, async (interaction) => {
+	if (interaction.isChatInputCommand()) {
+		// command handling...
+	} else if (interaction.isAutocomplete()) {
+		const command = interaction.client.commands.get(interaction.commandName);
+		if (!command) {
+			console.error(`No command matching ${interaction.commandName} was found.`);
+			return;
+		}
+		try {
+			await command.autocomplete(interaction);
+		} catch (error) {
+			console.error(error);
+		}
+	}
+});
