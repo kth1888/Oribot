@@ -5,3 +5,11 @@ const data = new SlashCommandBuilder()
 	.setDescription('Select a member and kick them.')
 	.addUserOption((option) => option.setName('target').setDescription('The member to kick').setRequired(true))
 	.setDefaultMemberPermissions(PermissionFlagsBits.KickMembers);
+
+module.exports = {
+	data: data,
+
+	async execute(interaction) {
+	await interaction.reply('kick');
+},
+};
