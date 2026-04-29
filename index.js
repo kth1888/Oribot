@@ -41,5 +41,15 @@ for (const file of eventFiles) {
     }
 }
 
+
+// Application Settings
+const { initScheduledTasks } = require('./scheduler.js');
+
+client.once('clientReady', (readyClient) => {
+    console.log(`${readyClient.user.tag} 준비 완료!`);
+    initScheduledTasks(readyClient);
+});
+
+
 // Log in to Discord with your client's token
 client.login(token);

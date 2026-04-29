@@ -5,6 +5,7 @@
     "eslint": "^10.2.1"
   },
   "dependencies": {
-    "discord.js": "^14.26.3"
+    "discord.js": "^14.26.3",
+    "node-cron": "^4.2.1"
   }
 }
