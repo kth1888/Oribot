@@ -1,4 +1,3 @@
-const cheerio = require('cheerio');
 const cron = require('node-cron');
 const { getDustData } = require('./commands/utility/먼지.js');
 const db = require('./db.js');
@@ -7,16 +6,8 @@ const testTargetChannelId = '1498606841746292777';
 
 function initScheduledTasks(client) {
 
-    // 잔디심기 알리미
-    cron.schedule('0 8-22/2 * * *', () => {
-        if (testTargetChannelId) {
-            checkDailyCommit(client);
-        }
-    });
-
-
     // 미세먼지 주기적 알림
-    cron.schedule('*/10 9-21 * * *', () => {
+    cron.schedule('0,10,20,30,40,50 * * * *', () => {
         if (testTargetChannelId) {
             checkDustAndAlert(client);
         }
@@ -58,6 +49,7 @@ async function checkDustAndAlert(client) {
 
         }
 
+
         userConfig.currentDustGrade = userDustGrade;
         if (previousDustGrade === null) {
             if (canUserVentilate) {
@@ -73,49 +65,6 @@ async function checkDustAndAlert(client) {
         }
         db.saveUsers(users);
     }
-
-async function checkDailyCommit(client) {
-    console.log('--- 유저 일일 커밋 체크 ---');
-
-    const today = new Date();
-    const date = today.getFullYear() +
-	'-' + ((today.getMonth() + 1) < 9 ? '0' + (today.getMonth() + 1) : (today.getMonth() + 1)) +
-	'-' + ((today.getDate()) < 9 ? '0' + (today.getDate()) : (today.getDate()));
-    console.log(date);
-
-    const users = db.loadUsers();
-    const channel = await client.channels.fetch(testTargetChannelId);
-
-    for (const userId in users) {
-        const userConfig = users[userId];
-        const userProfileLink = userConfig.githubLink;
-
-        // pass if user not set an github link
-        if (!userProfileLink) {
-            continue;
-        }
-
-        try {
-            const response = await fetch(userProfileLink, {
-                'method': 'GET',
-            });
-            const html = await response.text();
-            const $ = cheerio.load(html);
-            let level = 0;
-            const targetDay = $(`td[data-date='${date}']`);
-            if (targetDay.length > 0) {
-                level = targetDay.attr('data-level');
-            }
-
-            if (level == 0) {
-                await channel.send(`**${date}** \n 오늘 올라온 커밋이 없습니다.`);
-            }
-
-        } catch (error) {
-            console.error(error);
-        }
-    }
-}
 
 
 module.exports = { initScheduledTasks };
