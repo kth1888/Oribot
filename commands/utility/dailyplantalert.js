@@ -17,7 +17,16 @@ module.exports = {
         const githubLink = interaction.options.getString('link');
         const allUsers = loadUsers();
 
-        allUsers[userId].githubLink = githubLink;
+        const info = {
+            targetChannelId: interaction.channelId,
+            githubLink: githubLink,
+        };
+
+        if (!allUsers[userId]) {
+            allUsers[userId] = {};
+        }
+
+        allUsers[userId].githubAlarm = info;
 
         saveUsers(allUsers);
 

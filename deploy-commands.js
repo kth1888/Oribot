@@ -3,6 +3,8 @@ const { REST, Routes } = require('discord.js');
 // const { clientId, guildId, token } = require('./config.json');
 // Global deployment
 const { clientId, token } = require('./config.json');
+// Test deployment (Test server)
+// const { clientId, token } = require('./testcfg.json');
 const fs = require('node:fs');
 const path = require('node:path');
 

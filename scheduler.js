@@ -3,23 +3,17 @@ const cron = require('node-cron');
 const { getDustData } = require('./commands/utility/먼지.js');
 const db = require('./db.js');
 
-const testTargetChannelId = '1498606841746292777';
-
 function initScheduledTasks(client) {
 
     // 잔디심기 알리미
     cron.schedule('0 8-22/2 * * *', () => {
-        if (testTargetChannelId) {
-            checkDailyCommit(client);
-        }
+        checkDailyCommit(client);
     });
 
 
     // 미세먼지 주기적 알림
     cron.schedule('*/10 9-21 * * *', () => {
-        if (testTargetChannelId) {
-            checkDustAndAlert(client);
-        }
+        checkDustAndAlert(client);
     });
 }
 
@@ -29,12 +23,17 @@ async function checkDustAndAlert(client) {
     const dustData = await getDustData();
     const levels = dustData.whoLevels;
     const users = db.loadUsers();
-    const channel = await client.channels.fetch(testTargetChannelId);
+
+    if (!users || Object.keys(users).length === 0) {
+        console.log('알림을 보낼 유저 데이터가 없습니다. 작업을 건너뜁니다.');
+        return;
+    }
 
     for (const userId in users) {
         const userConfig = users[userId];
-        const location = userConfig.userLocation;
-        const targetChannelId = userConfig.channelLocation;
+        const location = userConfig.munjiAlarm.userLocation;
+        const targetChannelId = userConfig.munjiAlarm.targetChannelId;
+        const channel = await client.channels.fetch(targetChannelId);
         const cv = dustData.info.data[location];
 
         if (!cv) {
@@ -42,7 +41,7 @@ async function checkDustAndAlert(client) {
             continue;
         }
 
-        const previousDustGrade = userConfig.currentDustGrade;
+        const previousDustGrade = userConfig.munjiAlarm.currentDustGrade;
         const userDustGrade = cv.pm10Grade_whoStandard_eightLevel;
         const canUserVentilate = userDustGrade < 5;
         const isGradeChanged = previousDustGrade != userDustGrade ? true : false;
@@ -52,13 +51,13 @@ async function checkDustAndAlert(client) {
                 continue;
             } else {
                 await channel.send(`[안내] ${location} 지역은 현재 데이터를 불러올 수 없습니다.`);
-                userConfig.currentDustGrade = userDustGrade;
+                userConfig.munjiAlarm.currentDustGrade = userDustGrade;
                 continue;
             }
 
         }
 
-        userConfig.currentDustGrade = userDustGrade;
+        userConfig.munjiAlarm.currentDustGrade = userDustGrade;
         if (previousDustGrade === null) {
             if (canUserVentilate) {
                 await channel.send(`**${dustData.datatime}** \n** ${location} : 지금 환기 타임!!** **(${levels[userDustGrade].label} ${levels[userDustGrade].emoji})** `);
@@ -84,12 +83,17 @@ async function checkDailyCommit(client) {
     console.log(date);
 
     const users = db.loadUsers();
-    const channel = await client.channels.fetch(testTargetChannelId);
+
+    if (!users || Object.keys(users).length === 0) {
+        console.log('알림을 보낼 유저 데이터가 없습니다. 작업을 건너뜁니다.');
+        return;
+    }
 
     for (const userId in users) {
         const userConfig = users[userId];
-        const userProfileLink = userConfig.githubLink;
-
+        const userProfileLink = userConfig.githubAlarm.githubLink;
+        const targetChannelId = userConfig.githubAlarm.targetChannelId;
+        const channel = await client.channels.fetch(targetChannelId);
         // pass if user not set an github link
         if (!userProfileLink) {
             continue;

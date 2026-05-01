@@ -19,12 +19,18 @@ module.exports = {
 
         const allUsers = loadUsers();
 
-        allUsers[userId] = {
+        const info = {
             userLocation: alarmLocation,
-            channelLocation: channelId,
+            targetChannelId: channelId,
             updatedAt: new Date().toISOString(),
             currentDustGrade: null,
         };
+
+        if (!allUsers[userId]) {
+            allUsers[userId] = {};
+        }
+
+        allUsers[userId].munjiAlarm = info;
 
         saveUsers(allUsers);
 
