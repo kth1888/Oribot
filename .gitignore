@@ -1,4 +1,6 @@
 node_modules
 .env
+.env.*
 config.json
 testcfg.json
+user_configs.json
