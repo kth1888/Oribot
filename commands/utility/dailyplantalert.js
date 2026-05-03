@@ -4,22 +4,30 @@ const { loadUsers, saveUsers } = require('../../db.js');
 const data = new SlashCommandBuilder()
                 .setName('잔디일퀘알림설정')
                 .setDescription('오늘 커밋했는지 알림 받습니다.')
+                .addStringOption(option =>
+                    option
+                    .setName('username')
+                    .setDescription('GitHub 유저네임')
+                    .setRequired(true))
                 .addStringOption((option) =>
                     option
-                    .setName('link')
-                .setDescription('깃헙 프로필 링크'));
+                    .setName('token')
+                    .setDescription('깃헙 PAT')
+                    .setRequired(true));
 
 module.exports = {
     data: data,
 
     async execute(interaction) {
         const userId = interaction.user.id;
-        const githubLink = interaction.options.getString('link');
+        const username = interaction.options.getString('username');
+        const githubToken = interaction.options.getString('token');
         const allUsers = loadUsers();
 
         const info = {
             targetChannelId: interaction.channelId,
-            githubLink: githubLink,
+            username: username,
+            githubToken: githubToken,
         };
 
         if (!allUsers[userId]) {

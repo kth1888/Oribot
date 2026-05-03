@@ -1,11 +1,10 @@
-const cheerio = require('cheerio');
 const cron = require('node-cron');
 const { getDustData } = require('./commands/utility/먼지.js');
 const db = require('./db.js');
 
 function initScheduledTasks(client) {
 
-    // 잔디심기 알리미
+    // 잔디심기 알리미 0 8-22/2 * * * // 1분간격(테스트용) : * * * * *
     cron.schedule('0 8-22/2 * * *', () => {
         checkDailyCommit(client);
     });
@@ -80,7 +79,6 @@ async function checkDailyCommit(client) {
     const date = today.getFullYear() +
 	'-' + ((today.getMonth() + 1) < 9 ? '0' + (today.getMonth() + 1) : (today.getMonth() + 1)) +
 	'-' + ((today.getDate()) < 9 ? '0' + (today.getDate()) : (today.getDate()));
-    console.log(date);
 
     const users = db.loadUsers();
 
@@ -91,29 +89,66 @@ async function checkDailyCommit(client) {
 
     for (const userId in users) {
         const userConfig = users[userId];
-        const userProfileLink = userConfig.githubAlarm.githubLink;
+        const username = userConfig.githubAlarm.username;
+        const userToken = userConfig.githubAlarm.githubToken;
         const targetChannelId = userConfig.githubAlarm.targetChannelId;
         const channel = await client.channels.fetch(targetChannelId);
         // pass if user not set an github link
-        if (!userProfileLink) {
+        if (!userToken) {
             continue;
         }
 
         try {
-            const response = await fetch(userProfileLink, {
-                'method': 'GET',
+            const response = await fetch('https://api.github.com/graphql', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${userToken}`,
+                    'Content-Type': 'application/json',
+                    'User-Agent': 'node-fetch',
+                },
+                body: JSON.stringify({
+                    query: `
+                    query($userName:String!) {
+                        user(login: $userName) {
+                            contributionsCollection {
+                                contributionCalendar {
+                                    totalContributions
+                                    weeks {
+                                        contributionDays {
+                                            date
+                                            contributionLevel
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }`,
+                    variables: { userName: username },
+                }),
             });
-            const html = await response.text();
-            const $ = cheerio.load(html);
-            let level = 0;
-            const targetDay = $(`td[data-date='${date}']`);
-            if (targetDay.length > 0) {
-                level = targetDay.attr('data-level');
+
+            result = await response.json();
+            // console.log('API Response:', JSON.stringify(result, null, 2));
+
+            calendar = result
+                            .data
+                                .user
+                                    .contributionsCollection
+                                        .contributionCalendar;
+            const allDays = calendar.weeks.flatMap(week => week.contributionDays);
+            const todayData = allDays.find(day => day.date === date);
+
+            if (todayData) {
+                const level = todayData.contributionLevel;
+                // console.log(`오늘(${date})의 기여도 레벨: ${level}`);
+
+                if (level == 'NONE') {
+                await channel.send(`**${date}** \n 오늘 올라온 커밋이 없습니다.`);
+                } else {
+                    // console.log('오늘도 갓생살기 성공!!');
+                }
             }
 
-            if (level == 0) {
-                await channel.send(`**${date}** \n 오늘 올라온 커밋이 없습니다.`);
-            }
 
         } catch (error) {
             console.error(error);
@@ -124,7 +159,6 @@ async function checkDailyCommit(client) {
 
 module.exports = { initScheduledTasks };
 
-// 알림 받을 채널 설정 기능
 // 알림 가는 시간 조정 기능 ( 9 to 9 )
 // cron delay settings : https://goodgirlgonebad.tistory.com/79
 // https://velog.io/@jay2u8809/Crontab%ED%81%AC%EB%A1%A0%ED%83%AD-%EC%8B%9C%EA%B0%84-%EC%84%A4%EC%A0%95

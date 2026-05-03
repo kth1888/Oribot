@@ -2,11 +2,14 @@ const { REST, Routes } = require('discord.js');
 // Test deployment
 // const { clientId, guildId, token } = require('./config.json');
 // Global deployment
-const { clientId, token } = require('./config.json');
+// const { clientId, token } = require('./config.json');
 // Test deployment (Test server)
 // const { clientId, token } = require('./testcfg.json');
 const fs = require('node:fs');
 const path = require('node:path');
+
+const token = process.env.DISCORD_TOKEN;
+const clientId = process.env.CLIENT_ID;
 
 const commands = [];
 // Grab all the command folders from the commands directory you created earlier

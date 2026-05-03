@@ -8,5 +8,12 @@
     "cheerio": "^1.2.0",
     "discord.js": "^14.26.3",
     "node-cron": "^4.2.1"
-  }
+  },
+  "scripts": {
+      "start": "node --env-file=.env index.js",
+      "test": "node --env-file=.env.test index.js",
+      "deploy": "node --env-file=.env deploy-commands.js",
+      "deploy:test": "node --env-file=.env.test deploy-commands.js",
+      "refresh:test": "node --env-file=.env.test deploy-commands.js && node --env-file=.env.test index.js"
+    }
 }

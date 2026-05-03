@@ -3,8 +3,13 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { Client, GatewayIntentBits, Collection } = require('discord.js');
-const { token } = require('./config.json');
-// const { token } = require('./testcfg.json');
+
+const token = process.env.DISCORD_TOKEN;
+
+if (!token) {
+    console.error('에러: DISCORD_TOKEN이 설정되지 않았습니다.');
+    process.exit(1);
+}
 
 // Create a new client instance
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
