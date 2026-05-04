@@ -14,6 +14,7 @@
       "test": "node --env-file=.env.test index.js",
       "deploy": "node --env-file=.env deploy-commands.js",
       "deploy:test": "node --env-file=.env.test deploy-commands.js",
+      "refresh": "node --env-file=.env deploy-commands.js && node --env-file=.env index.js",
       "refresh:test": "node --env-file=.env.test deploy-commands.js && node --env-file=.env.test index.js"
     }
 }
