@@ -1,11 +1,12 @@
 const cron = require('node-cron');
 const { checkDustAndAlert } = require('./services/checkdustandalert.js');
 const { checkDailyCommit } = require('./services/checkdailycommit.js');
+const { alertLowBattery } = require('./services/alertlowbattery.js');
 
 
 function initScheduledTasks(client) {
     // Test space (instant run)
-    // checkDustAndAlert(client);
+    // alertLowBattery(client);
 
     // 잔디심기 알리미 0 8-22/2 * * * // 1분간격(테스트용) : * * * * *
     cron.schedule('0 8-22/2 * * *', () => {
@@ -16,6 +17,11 @@ function initScheduledTasks(client) {
     // 미세먼지 주기적 알림
     cron.schedule('*/10 9-21 * * *', () => {
         checkDustAndAlert(client);
+    });
+
+    // 서버 배터리 알림
+    cron.schedule('*/10 9-21 * * *', () => {
+    alertLowBattery(client);
     });
 }
 

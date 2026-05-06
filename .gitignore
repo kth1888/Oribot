@@ -4,3 +4,4 @@ node_modules
 config.json
 testcfg.json
 user_configs.json
+system_configs.json

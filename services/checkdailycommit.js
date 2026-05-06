@@ -84,4 +84,4 @@ async function checkDailyCommit(client) {
     }
 }
 
-module.exports  = { checkDailyCommit };
+module.exports = { checkDailyCommit };
