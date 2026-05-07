@@ -24,6 +24,7 @@ module.exports = {
 
         const info = {
             targetChannel: channelId,
+            isAlertSent: false,
         };
 
         if (!configs[managerId]) {

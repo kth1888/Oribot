@@ -1,12 +1,15 @@
 const { execSync } = require('child_process');
 
-const var1 = 'Now drawing from \'AC Power\' \n -InternalBattery-0 (id=25362531)    61%; charging; 1:37 remaining present: true';
-const var2 = 'Now drawing from \'Battery Power\' \n -InternalBattery-0 (id=25362531)    23%; discharging; 1:37 remaining present: true';
-const var3 = 'Now drawing from \'Battery Power\' \n -InternalBattery-0 (id=25362531)    100%; charged; 0:00 remaining present: true';
+// Test variables
+// const var1 = 'Now drawing from \'AC Power\' \n -InternalBattery-0 (id=25362531)    61%; charging; 1:37 remaining present: true';
+// const var2 = 'Now drawing from \'Battery Power\' \n -InternalBattery-0 (id=25362531)    23%; discharging; 1:37 remaining present: true';
+// const var3 = 'Now drawing from \'Battery Power\' \n -InternalBattery-0 (id=25362531)    100%; charged; 0:00 remaining present: true';
+// const var4 = 'Now drawing from \'AC Power\' \n -InternalBattery-0 (id=25362531)       83%; AC attached; not charging present: true';
 
 function getPowerStatus() {
     try {
         let batteryLevel, powerType, powerStatus;
+        // result in mac = execSync('pmset -g batt').toString();
         const result = execSync('pmset -g batt').toString();
 
         const regex1 = /(\d+)%/;
