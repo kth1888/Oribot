@@ -20,7 +20,6 @@ async function checkDailyCommit(client) {
         const username = userConfig.githubAlarm.username;
         const userToken = userConfig.githubAlarm.githubToken;
         const targetChannelId = userConfig.githubAlarm.targetChannelId;
-        const channel = await client.channels.fetch(targetChannelId);
         // pass if user not set an github link
         if (!userToken) {
             continue;
@@ -68,20 +67,22 @@ async function checkDailyCommit(client) {
 
             if (todayData) {
                 const level = todayData.contributionLevel;
+                const channel = await client.channels.fetch(targetChannelId);
                 // console.log(`오늘(${date})의 기여도 레벨: ${level}`);
 
-                if (level == 'NONE') {
-                await channel.send(`**${date}** \n 오늘 올라온 커밋이 없습니다.`);
-                } else {
-                    // console.log('오늘도 갓생살기 성공!!');
+                if (level !== 'NONE' && userConfig.githubAlarm.commitFinished !== true) {
+                    await channel.send(`**${date}** \n 오늘의 첫 커밋을 확인했습니다! 오늘도 갓생 성공! 🔥`);
+                    userConfig.githubAlarm.commitFinished = true;
+                    configManager.saveConfigs(users);
+                } else if (level === 'NONE' && userConfig.githubAlarm.commitFinished === true) {
+                    userConfig.githubAlarm.commitFinished = false;
+                    console.log(`[정보] ${username}님의 커밋 플래그가 새 날짜를 위해 리셋되었습니다.`);
                 }
             }
-
-
         } catch (error) {
-            console.error(error);
+                console.error(error);
+            }
         }
-    }
 }
 
 module.exports = { checkDailyCommit };
