@@ -6,7 +6,7 @@ const { alertLowBattery } = require('./services/alertlowbattery.js');
 
 function initScheduledTasks(client) {
     // Test space (instant run)
-    // alertLowBattery(client);
+
 
     // 잔디심기 알리미 0 8-22/2 * * * // 1분간격(테스트용) : * * * * *
     cron.schedule('0 8-22/2 * * *', () => {

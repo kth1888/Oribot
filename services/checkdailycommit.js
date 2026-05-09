@@ -6,7 +6,8 @@ async function checkDailyCommit(client) {
     const today = new Date();
     const date = today.getFullYear() +
     '-' + ((today.getMonth() + 1) < 9 ? '0' + (today.getMonth() + 1) : (today.getMonth() + 1)) +
-    '-' + ((today.getDate()) < 9 ? '0' + (today.getDate()) : (today.getDate()));
+    '-' + ((today.getDate()) <= 9 ? '0' + (today.getDate()) : (today.getDate()));
+    console.log(date);
 
     const users = db.loadUsers();
 
@@ -64,19 +65,28 @@ async function checkDailyCommit(client) {
                                         .contributionCalendar;
             const allDays = calendar.weeks.flatMap(week => week.contributionDays);
             const todayData = allDays.find(day => day.date === date);
+            console.log(todayData);
+
+            // 최근 체크한 날짜와 다른 경우 알림이 가도록 commitFinished를 false로 설정
+            if (userConfig.githubAlarm.lastChecked !== date) {
+                userConfig.githubAlarm.commitFinished = false;
+                userConfig.githubAlarm.lastChecked = date;
+                db.saveUsers(users);
+                console.log(`[정보] ${username}님의 알림 상태가 ${date} 날짜로 초기화되었습니다.`);
+            }
 
             if (todayData) {
                 const level = todayData.contributionLevel;
                 const channel = await client.channels.fetch(targetChannelId);
-                // console.log(`오늘(${date})의 기여도 레벨: ${level}`);
+                console.log(`오늘(${date})의 기여도 레벨: ${level}`);
 
                 if (level !== 'NONE' && userConfig.githubAlarm.commitFinished !== true) {
-                    await channel.send(`**${date}** \n 오늘의 첫 커밋을 확인했습니다! 오늘도 갓생 성공! 🔥`);
-                    userConfig.githubAlarm.commitFinished = true;
-                    configManager.saveConfigs(users);
-                } else if (level === 'NONE' && userConfig.githubAlarm.commitFinished === true) {
-                    userConfig.githubAlarm.commitFinished = false;
-                    console.log(`[정보] ${username}님의 커밋 플래그가 새 날짜를 위해 리셋되었습니다.`);
+                    if (channel) {
+                        await channel.send(`**${date}** \n 오늘의 첫 커밋을 확인했습니다! 오늘도 갓생 성공! 🔥`);
+                        userConfig.githubAlarm.commitFinished = true;
+                        db.saveUsers(users);
+                    }
+
                 }
             }
         } catch (error) {
