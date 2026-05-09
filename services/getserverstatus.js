@@ -5,12 +5,19 @@ const { execSync } = require('child_process');
 // const var2 = 'Now drawing from \'Battery Power\' \n -InternalBattery-0 (id=25362531)    23%; discharging; 1:37 remaining present: true';
 // const var3 = 'Now drawing from \'Battery Power\' \n -InternalBattery-0 (id=25362531)    100%; charged; 0:00 remaining present: true';
 // const var4 = 'Now drawing from \'AC Power\' \n -InternalBattery-0 (id=25362531)       83%; AC attached; not charging present: true';
+const var5 = 'Now drawing from \'TEST LAUNCHING\' \n -InternalBattery-0 (id=25362531)       100%; AC attached; not charging present: true';
 
 function getPowerStatus() {
     try {
-        let batteryLevel, powerType, powerStatus;
+        let batteryLevel, powerType, powerStatus, result;
         // result in mac = execSync('pmset -g batt').toString();
-        const result = execSync('pmset -g batt').toString();
+        const platform = process.platform;
+
+        if (platform === 'darwin') {
+            result = execSync('pmset -g batt').toString();
+        } else if (platform === 'win32') {
+            result = var5;
+        }
 
         const regex1 = /(\d+)%/;
         const match1 = result.match(regex1);
