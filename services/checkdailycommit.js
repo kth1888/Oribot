@@ -87,6 +87,8 @@ async function checkDailyCommit(client) {
                         db.saveUsers(users);
                     }
 
+                } else if (level === 'NONE') {
+                    await channel.send(`**${date}** \n 오늘 올라온 커밋이 없습니다.`);
                 }
             }
         } catch (error) {
