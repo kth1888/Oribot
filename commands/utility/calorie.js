@@ -1,5 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
-
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 const data = new SlashCommandBuilder()
                 .setName('칼로리')
@@ -47,8 +46,32 @@ module.exports = {
             const foodBrand = searchResult[0].brand;
             const foodAmount = searchResult[0].amount;
 
+            const imageUrl = await getFoodImage(foodFullName);
+
+            const embed = new EmbedBuilder()
+                .setColor(0x0099FF)
+                .setTitle(foodFullName)
+                // .setURL('')
+                // .setAuthor({ name: 'Oribot', })
+                // .setDescription('설명')
+
+                .addFields(
+                    // { name: '제품명', value: foodFullName, inline:true },
+                    { name: '칼로리', value: `${Math.floor(foodCalorie)} kcal`, inline: true },
+                    { name: '양', value: `${Math.floor(parseFloat(foodAmount))} g`, inline: true },
+                    { name: '제조사', value: foodBrand, inline: false },
+                );
+                // .setImage('imglink')
+                // .setTimestamp()
+                // .setFooter({ text: '제공: 공공데이터포털 / 네이버' });
+
+                if (imageUrl) {
+                    embed.setThumbnail(imageUrl);
+                }
+
             const response = await interaction.editReply({
-                content: `${foodFullName} (${foodBrand}): ${foodCalorie} (${foodAmount})`,
+                // content: `${foodFullName} (${foodBrand}): ${foodCalorie} (${foodAmount})`,
+                embeds: [embed],
             });
 
         } catch (error) {
@@ -98,5 +121,29 @@ async function getFoodData(foodName) {
     } catch (error) {
         console.error('API 호출 에러:', error);
         throw error;
+    }
+}
+
+async function getFoodImage(query) {
+    const clientId = 'ktxKEnq5zX5DhE7VJhRM'; // 발급받은 ID
+    const clientSecret = 'MgO4WXA8x6'; // 발급받은 Secret
+
+    // 제품명 뒤에 '음식'이나 '패키지'를 붙이면 더 정확한 사진이 나옵니다.
+    const url = `https://openapi.naver.com/v1/search/image?query=${encodeURIComponent(query)}&display=1&sort=sim`;
+
+    try {
+        const response = await fetch(url, {
+            headers: {
+                'X-Naver-Client-Id': clientId,
+                'X-Naver-Client-Secret': clientSecret
+            }
+        });
+        const data = await response.json();
+
+        // 검색 결과가 있으면 첫 번째 이미지 주소 반환, 없으면 null
+        return data.items && data.items.length > 0 ? data.items[0].link : null;
+    } catch (error) {
+        console.error('이미지 검색 에러:', error);
+        return null;
     }
 }
