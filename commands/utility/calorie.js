@@ -7,29 +7,56 @@ const data = new SlashCommandBuilder()
                 .addStringOption((option) =>
                     option
                     .setName('foodname')
-                    .setDescription('음식이름'));
+                    .setDescription('음식이름')
+                    .setRequired(true)
+                .setAutocomplete(true));
 
 module.exports = {
     data: data,
 
+    async autocomplete(interaction) {
+        const focusedValue = interaction.options.getFocused();
+
+        if (focusedValue.length < 1) return await interaction.respond([]);
+
+        try {
+            const result = await getFoodData(focusedValue);
+
+            await interaction.respond(
+                result.map(choice => ({ name: `${choice.name} - ${choice.brand}`, value: choice.name })),
+            );
+        } catch (error) {
+            console.error(error);
+        }
+    },
+
     async execute(interaction) {
         const foodName = interaction.options.getString('foodname');
-        const searchResult = await getFoodData(foodName);
-        console.log(searchResult);
-        if (!searchResult || searchResult.length === 0) {
-            return await interaction.reply({
-                content: `❌ **${foodName}**에 대한 검색 결과가 없습니다.`,
+
+        try {
+            await interaction.deferReply();
+            const searchResult = await getFoodData(foodName);
+
+            if (!searchResult || searchResult.length === 0) {
+                return await interaction.editReply({
+                    content: `❌ **${foodName}**에 대한 검색 결과가 없습니다.`,
+                });
+            }
+            const foodFullName = searchResult[0].name;
+            const foodCalorie = searchResult[0].calories;
+            const foodBrand = searchResult[0].brand;
+            const foodAmount = searchResult[0].amount;
+
+            const response = await interaction.editReply({
+                content: `${foodFullName} (${foodBrand}): ${foodCalorie} (${foodAmount})`,
             });
+
+        } catch (error) {
+            console.error(error);
+            await interaction.editReply({ content: '데이터 처리 중 오류가 발생했습니다.' });
         }
 
-        const foodFullName = searchResult[0].name;
-        const foodCalorie = searchResult[0].calories;
-        const foodBrand = searchResult[0].brand;
-        const foodAmount = searchResult[0].amount;
 
-        const response = await interaction.reply({
-            content: `${foodFullName} (${foodBrand}): ${foodCalorie} (${foodAmount})`,
-        });
     },
 
 };
@@ -48,6 +75,12 @@ async function getFoodData(foodName) {
     try {
         const response = await fetch(url);
         const result = await response.json();
+
+        if (!result || !result.body || !result.body.items) {
+            console.log('API 응답에 데이터 없음');
+            return [];
+        }
+
         const rawItems = result.body.items;
 
         const slimData = rawItems.map(item => ({
@@ -59,6 +92,7 @@ async function getFoodData(foodName) {
 
         fs.writeFileSync('result.json', JSON.stringify(slimData, null, 2), 'utf-8');
 
+        console.log(slimData);
         return slimData;
 
     } catch (error) {
